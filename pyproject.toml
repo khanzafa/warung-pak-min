@@ -1,9 +1,13 @@
 [project]
-name = "catering"
+name = "warung-pak-min"
 version = "0.1.0"
-description = "Add your description here"
+description = "Sistem manajemen warung makan dan minum sederhana dengan kasbon, pemesanan harian, dan laporan keuangan."
 readme = "README.md"
+authors = [
+    { name = "Khanza Fadila Azhara", email = "khanzafadilaazz@gmail.com" }
+]
 requires-python = ">=3.13"
+keywords = ["flask", "sqlalchemy", "pydantic", "kasbon", "order", "warung"]
 dependencies = [
     "flask>=3.1.1",
     "flask-login>=0.6.3",
