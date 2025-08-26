@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Profil - Catering Management{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Profil Pengguna</h1>
+            <p class="mt-2 text-gray-600">Kelola informasi akun Anda</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Profile Card -->
+            <div class="lg:col-span-2 card">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">Informasi Profil</h2>
+                
+                <div class="space-y-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-20 h-20 bg-primary-600 rounded-full flex items-center justify-center">
+                            <i class="fa-user text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">{{ user.username }}</h3>
+                            <p class="text-gray-600">{{ user.email }}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                            <p class="text-gray-900">{{ user.username }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <p class="text-gray-900">{{ user.email }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {% if user.is_active %}Aktif{% else %}Tidak Aktif{% endif %}
+                            </span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Bergabung</label>
+                            <p class="text-gray-900">{{ user.created_at.strftime('%d %B %Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Card -->
+            <div class="space-y-6">
+                <div class="card">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Aksi</h3>
+                    <div class="space-y-3">
+                        <a href="#" class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <i class="fa-edit mr-2"></i>
+                            Edit Profil
+                        </a>
+                        <a href="#" class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700">
+                            <i class="fa-key mr-2"></i>
+                            Ganti Password
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Status Sistem</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Total Customer</span>
+                            <span class="font-medium">24</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Pesanan Hari Ini</span>
+                            <span class="font-medium">12</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Pembayaran Bulan Ini</span>
+                            <span class="font-medium">Rp 2.500.000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

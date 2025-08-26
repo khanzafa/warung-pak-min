@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if request.endpoint == 'payments.edit_payment' %}
+        Edit Pembayaran
+    {% else %}
+        Tambah Pembayaran
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 py-8">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                        {% if request.endpoint == 'payments.edit_payment' %}
+                            Edit Pembayaran
+                        {% else %}
+                            Tambah Pembayaran
+                        {% endif %}
+                    </h1>
+                    <p class="text-gray-600">
+                        {% if request.endpoint == 'payments.edit_payment' %}
+                            Ubah data pembayaran pelanggan
+                        {% else %}
+                            Tambahkan pembayaran baru dari pelanggan
+                        {% endif %}
+                    </p>
+                </div>
+                <a href="{{ url_for('payments.list_payments') }}" 
+                   class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors duration-200">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Kembali
+                </a>
+            </div>
+        </div>
+
+        <!-- Form Card -->
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div class="px-8 py-6">
+                <form method="POST" id="paymentForm">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="space-y-6">
+                        <!-- Date Field -->
+                        <div>
+                            <label for="{{ form.date.id }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ form.date.label.text }}
+                                <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.date(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200") }}
+                            {% if form.date.errors %}
+                                <div class="mt-1">
+                                    {% for error in form.date.errors %}
+                                        <p class="text-sm text-red-600">{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Customer Field -->
+                        <div>
+                            <label for="{{ form.customer_id.id }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ form.customer_id.label.text }}
+                                <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.customer_id(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200") }}
+                            {% if form.customer_id.errors %}
+                                <div class="mt-1">
+                                    {% for error in form.customer_id.errors %}
+                                        <p class="text-sm text-red-600">{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Amount Field -->
+                        <div>
+                            <label for="{{ form.amount.id }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ form.amount.label.text }}
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-3 text-gray-500 font-medium">Rp</span>
+                                {{ form.amount(class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200", placeholder="0") }}
+                            </div>
+                            {% if form.amount.errors %}
+                                <div class="mt-1">
+                                    {% for error in form.amount.errors %}
+                                        <p class="text-sm text-red-600">{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <p class="mt-1 text-sm text-gray-500">Masukkan jumlah pembayaran dalam Rupiah</p>
+                        </div>
+
+                        <!-- Description Field -->
+                        <div>
+                            <label for="{{ form.description.id }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                                {{ form.description.label.text }}
+                            </label>
+                            {{ form.description(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 resize-none", rows="4", placeholder="Tambahkan keterangan pembayaran (opsional)...") }}
+                            {% if form.description.errors %}
+                                <div class="mt-1">
+                                    {% for error in form.description.errors %}
+                                        <p class="text-sm text-red-600">{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex items-center justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
+                        <a href="{{ url_for('payments.list_payments') }}" 
+                           class="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors duration-200">
+                            Batal
+                        </a>
+                        {{ form.submit(class="px-8 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="mt-6 bg-blue-50 rounded-lg border border-blue-200 p-6">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="w-5 h-5 text-blue-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800 mb-1">Informasi Penting</h3>
+                    <div class="text-sm text-blue-700">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Pastikan data pelanggan dan jumlah pembayaran sudah benar</li>
+                            <li>Tanggal pembayaran harus sesuai dengan tanggal transaksi</li>
+                            <li>Keterangan dapat membantu dalam pencatatan dan audit</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Format amount input with thousand separators
+    const amountInput = document.getElementById('{{ form.amount.id }}');
+    if (amountInput) {
+        amountInput.addEventListener('input', function(e) {
+            // Remove non-numeric characters except for the value itself
+            let value = e.target.value.replace(/[^\d]/g, '');
+            
+            // Add thousand separators for display (but keep original value)
+            if (value) {
+                // Store the raw value
+                e.target.dataset.rawValue = value;
+                // Display formatted value
+                e.target.value = parseInt(value).toLocaleString('id-ID');
+            } else {
+                e.target.dataset.rawValue = '';
+                e.target.value = '';
+            }
+        });
+
+        // Before form submission, restore raw value
+        document.getElementById('paymentForm').addEventListener('submit', function() {
+            if (amountInput.dataset.rawValue) {
+                amountInput.value = amountInput.dataset.rawValue;
+            }
+        });
+
+        // Format existing value on page load
+        if (amountInput.value) {
+            const existingValue = amountInput.value.replace(/[^\d]/g, '');
+            if (existingValue) {
+                amountInput.dataset.rawValue = existingValue;
+                amountInput.value = parseInt(existingValue).toLocaleString('id-ID');
+            }
+        }
+    }
+
+    // Set today as default date for new payments
+    const dateInput = document.getElementById('{{ form.date.id }}');
+    if (dateInput && !dateInput.value && '{{ request.endpoint }}' === 'payments.new_payment') {
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0];
+        dateInput.value = formattedDate;
+    }
+
+    // Enhance form validation
+    const form = document.getElementById('paymentForm');
+    form.addEventListener('submit', function(e) {
+        const customerSelect = document.getElementById('{{ form.customer_id.id }}');
+        const amountInput = document.getElementById('{{ form.amount.id }}');
+        
+        // Check if customer is selected
+        if (!customerSelect.value || customerSelect.value === '') {
+            e.preventDefault();
+            alert('Silakan pilih pelanggan terlebih dahulu.');
+            customerSelect.focus();
+            return;
+        }
+        
+        // Check if amount is valid
+        const rawAmount = amountInput.dataset.rawValue || amountInput.value.replace(/[^\d]/g, '');
+        if (!rawAmount || parseInt(rawAmount) <= 0) {
+            e.preventDefault();
+            alert('Silakan masukkan jumlah pembayaran yang valid.');
+            amountInput.focus();
+            return;
+        }
+    });
+
+    // Enhanced customer select styling
+    const customerSelect = document.getElementById('{{ form.customer_id.id }}');
+    if (customerSelect) {
+        // Add empty option if not exists and this is a new payment
+        if ('{{ request.endpoint }}' === 'payments.new_payment' && customerSelect.options.length > 0 && customerSelect.options[0].value !== '') {
+            const emptyOption = new Option('-- Pilih Pelanggan --', '');
+            customerSelect.insertBefore(emptyOption, customerSelect.firstChild);
+            customerSelect.value = '';
+        }
+    }
+});
+
+// Add loading state to submit button
+document.getElementById('paymentForm').addEventListener('submit', function() {
+    const submitBtn = document.querySelector('input[type="submit"]');
+    if (submitBtn) {
+        submitBtn.value = 'Menyimpan...';
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+    }
+});
+</script>
+{% endblock %}

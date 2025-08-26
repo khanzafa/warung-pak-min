@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
+    <title>{% block title %}Warung Pak Min{% endblock %}</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/output.css') }}"
+    />
+    <script
+      src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
+      defer
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      :root {
+        --primary-50: #f0fdf4;
+        --primary-100: #dcfce7;
+        --primary-200: #bbf7d0;
+        --primary-300: #86efac;
+        --primary-400: #4ade80;
+        --primary-500: #22c55e;
+        --primary-600: #16a34a;
+        --primary-700: #15803d;
+        --primary-800: #166534;
+        --primary-900: #14532d;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+      }
+
+      .nav-link {
+        position: relative;
+        padding-bottom: 4px;
+        transition: all 0.3s ease;
+      }
+
+      .nav-link::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background-color: var(--primary-500);
+        transition: width 0.3s ease;
+      }
+
+      .nav-link:hover::after,
+      .nav-link.active::after {
+        width: 100%;
+      }
+
+      .nav-link:hover,
+      .nav-link.active {
+        color: var(--primary-600);
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .flash-message {
+        animation: slideIn 0.3s ease-out;
+      }
+
+      .dropdown-menu {
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        pointer-events: none;
+      }
+
+      .dropdown-menu.open {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen flex flex-col"
+  >
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md border-b border-gray-100 sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <a
+              href="{{ url_for('main.index') }}"
+              class="flex items-center text-xl font-bold text-gray-800 group"
+            >
+              <div
+                class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-2 rounded-xl mr-3 transition-all duration-300 group-hover:rounded-2xl"
+              >
+                <i class="fas fa-utensils text-lg"></i>
+              </div>
+              <span
+                class="hidden sm:inline bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent"
+                >Warung Pak Min</span
+              >
+            </a>
+          </div>
+
+          <div class="flex items-center space-x-1 sm:space-x-2">
+            <a
+              href="{{ url_for('main.index') }}"
+              class="nav-link text-gray-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 {% if request.endpoint == 'main.index' %}active{% endif %}"
+            >
+              <i class="fas fa-tachometer-alt mr-1 text-sm"></i>
+              <span class="hidden sm:inline">Dashboard</span>
+            </a>
+            <a
+              href="{{ url_for('customers.list_customers') }}"
+              class="nav-link text-gray-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 {% if request.endpoint == 'customers.list_customers' %}active{% endif %}"
+            >
+              <i class="fas fa-users mr-1 text-sm"></i>
+              <span class="hidden sm:inline">Pelanggan</span>
+            </a>
+            <a
+              href="{{ url_for('orders.list_orders') }}"
+              class="nav-link text-gray-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 {% if request.endpoint == 'orders.list_orders' %}active{% endif %}"
+            >
+              <i class="fas fa-clipboard-list mr-1 text-sm"></i>
+              <span class="hidden sm:inline">Pesanan</span>
+            </a>
+            <a
+              href="{{ url_for('kasbons.list_kasbons') }}"
+              class="nav-link text-gray-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 {% if request.endpoint == 'kasbons.list_kasbons' %}active{% endif %}"
+            >
+              <i class="fas fa-money-bill-wave mr-1 text-sm"></i>
+              <span class="hidden sm:inline">Kasbon</span>
+            </a>
+            <a
+              href="{{ url_for('payments.list_payments') }}"
+              class="nav-link text-gray-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 {% if request.endpoint == 'payments.list_payments' %}active{% endif %}"
+            >
+              <i class="fas fa-credit-card mr-1 text-sm"></i>
+              <span class="hidden sm:inline">Pembayaran</span>
+            </a>
+
+            <!-- User profile dropdown -->
+            <div class="ml-2 relative" x-data="{ open: false }">
+              <div>
+                <button
+                  @click="open = !open"
+                  class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
+                >
+                  <div
+                    class="h-8 w-8 rounded-full bg-gradient-to-r from-primary-100 to-primary-200 text-primary-800 flex items-center justify-center shadow-inner"
+                  >
+                    <i class="fas fa-user text-sm"></i>
+                  </div>
+                  <i
+                    class="fas fa-chevron-down text-xs ml-1 text-gray-500 transition-transform duration-200"
+                    :class="{ 'rotate-180': open }"
+                  ></i>
+                </button>
+              </div>
+
+              <div
+                x-show="open"
+                @click.away="open = false"
+                x-transition:enter="transition ease-out duration-100"
+                x-transition:enter-start="transform opacity-0 scale-95"
+                x-transition:enter-end="transform opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-75"
+                x-transition:leave-start="transform opacity-100 scale-100"
+                x-transition:leave-end="transform opacity-0 scale-95"
+                class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+              >
+                <div
+                  class="py-1"
+                  role="menu"
+                  aria-orientation="vertical"
+                  aria-labelledby="user-menu-button"
+                >
+                  <a
+                    href="#"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    role="menuitem"
+                  >
+                    <i class="fas fa-user-circle mr-2"></i> Profil
+                  </a>
+                  <a
+                    href="#"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    role="menuitem"
+                  >
+                    <i class="fas fa-cog mr-2"></i> Pengaturan
+                  </a>
+                  <div class="border-t border-gray-100"></div>
+                  <a
+                    href="#"
+                    class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                    role="menuitem"
+                  >
+                    <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div class="fixed top-20 right-4 z-50 space-y-3 max-w-md w-full">
+      {% for category, message in messages %}
+      <div
+        class="flash-message px-4 py-3 rounded-xl shadow-lg border-l-4 flex items-start {% if category == 'success' %}bg-green-50 border-green-500 text-green-700{% elif category == 'error' or category == 'danger' %}bg-red-50 border-red-500 text-red-700{% elif category == 'warning' %}bg-yellow-50 border-yellow-500 text-yellow-700{% else %}bg-blue-50 border-blue-500 text-blue-700{% endif %}"
+      >
+        <div class="flex-shrink-0 pt-0.5">
+          <i
+            class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'error' or category == 'danger' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"
+          ></i>
+        </div>
+        <div class="ml-3 flex-1">
+          <p class="text-sm font-medium">{{ message }}</p>
+        </div>
+        <button
+          type="button"
+          class="ml-4 flex-shrink-0 text-gray-400 hover:text-gray-500"
+          onclick="this.parentElement.remove()"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex-grow w-full">
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-100 mt-8">
+      <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <p class="text-sm text-gray-600 flex items-center">
+            <i class="fas fa-utensils text-primary-600 mr-2"></i>
+            © 2023 Warung Pak Min. All rights reserved.
+          </p>
+          <div class="flex space-x-4 mt-2 md:mt-0">
+            <a
+              href="#"
+              class="text-gray-400 hover:text-primary-600 transition-colors duration-200"
+            >
+              <i class="fab fa-facebook-f"></i>
+            </a>
+            <a
+              href="#"
+              class="text-gray-400 hover:text-primary-600 transition-colors duration-200"
+            >
+              <i class="fab fa-instagram"></i>
+            </a>
+            <a
+              href="#"
+              class="text-gray-400 hover:text-primary-600 transition-colors duration-200"
+            >
+              <i class="fab fa-whatsapp"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  </body>
+</html>

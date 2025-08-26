@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+
+{% block title %}Ringkasan {{ summary.customer.name }} - Catering Manager{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-0">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Ringkasan {{ summary.customer.name }}</h1>
+        <p class="text-gray-600 mt-2">
+            {% if start_date and end_date %}
+                Periode: {{ start_date.strftime('%d/%m/%Y') }} - {{ end_date.strftime('%d/%m/%Y') }}
+            {% else %}
+                Semua data
+            {% endif %}
+        </p>
+        <p class="text-sm text-gray-500 mt-1">
+            Pricing: {{ summary.bundle_info.price_per_bundle|currency }} per {{ summary.bundle_info.portions_per_bundle }} porsi 
+            ({{ summary.price_per_portion|currency }} per porsi)
+        </p>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="bg-white shadow rounded-lg p-4 mb-6">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+            <div>
+            <label class="block text-sm font-medium text-gray-700">Dari Tanggal</label>
+            <input title="start_date" type="date" name="start_date" value="{{ start_date }}" 
+                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+            <label class="block text-sm font-medium text-gray-700">Sampai Tanggal</label>
+            <input title="end_date" type="date" name="end_date" value="{{ end_date }}" 
+                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg w-full">
+                🔍 Filter
+            </button>
+            </div>
+            <div>
+            <a href="{{ url_for('main.customer_summary_pdf', customer_id=summary.customer.id) }}{% if start_date %}?start_date={{ start_date }}{% if end_date %}&end_date={{ end_date }}{% endif %}{% elif end_date %}?end_date={{ end_date }}{% endif %}" 
+               class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium inline-block text-center w-full"
+               target="_blank" rel="noopener">
+                📄 Unduh PDF
+            </a>
+            </div>
+            <div>
+            <button type="button" onclick="exportToCSV()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg w-full">
+                📊 Export CSV
+            </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                            <span class="text-white text-sm">🍽️</span>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Porsi</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ summary.total_portions }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                            <span class="text-white text-sm">📦</span>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Bundle</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ summary.total_bundles }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                            <span class="text-white text-sm">📊</span>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Porsi Ditagih</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ summary.charged_portions }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                            <span class="text-white text-sm">💰</span>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Biaya Catering</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ summary.catering_cost|currency }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 {% if summary.remaining_balance >= 0 %}bg-red-500{% else %}bg-green-500{% endif %} rounded-md flex items-center justify-center">
+                            <span class="text-white text-sm">💳</span>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Sisa Tagihan</dt>
+                            <dd class="text-lg font-medium {% if summary.remaining_balance >= 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                                {{ summary.remaining_balance|currency }}
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bundle Info Alert -->
+    {% if summary.remaining_portions > 0 %}
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <span class="text-blue-400 text-lg">ℹ️</span>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-blue-800">
+                    Informasi Bundle
+                </h3>
+                <div class="mt-2 text-sm text-blue-700">
+                    <p>Customer mendapat <strong>{{ summary.remaining_portions }} porsi bonus</strong> karena sistem bundle.</p>
+                    <p>Total {{ summary.total_portions }} porsi dibulatkan menjadi {{ summary.total_bundles }} bundle ({{ summary.charged_portions }} porsi).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Detailed Tables -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Orders Table -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Pesanan Harian</h3>
+            </div>
+            <div class="overflow-x-auto max-h-96">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pagi</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Siang</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sore</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for order in summary.orders %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ order.date.strftime('%d/%m/%Y') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ order.morning_portions }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ order.afternoon_portions }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ order.evening_portions }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ order.total_portions }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if not summary.orders %}
+                <div class="text-center py-8 text-gray-500">
+                    Tidak ada pesanan dalam periode ini
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Financial Summary -->
+        <div class="space-y-6">
+            <!-- Kasbon Table -->
+            {% if summary.kasbons %}
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">Kasbon</h3>
+                </div>
+                <div class="overflow-x-auto max-h-64">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for kasbon in summary.kasbons %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ kasbon.date.strftime('%d/%m/%Y') }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">{{ kasbon.item_name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ kasbon.total_amount|currency }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Payment Table -->
+            {% if summary.payments %}
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">Pembayaran</h3>
+                </div>
+                <div class="overflow-x-auto max-h-64">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jumlah</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for payment in summary.payments %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ payment.date.strftime('%d/%m/%Y') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium">{{ payment.amount|currency }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">{{ payment.description or '-' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Financial Summary -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Ringkasan Keuangan</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Total Porsi:</span>
+                        <span class="font-medium">{{ summary.total_portions }} porsi</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Total Bundle:</span>
+                        <span class="font-medium">{{ summary.total_bundles }} bundle</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Porsi Ditagih:</span>
+                        <span class="font-medium">{{ summary.charged_portions }} porsi</span>
+                    </div>
+                    {% if summary.remaining_portions > 0 %}
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Porsi Bonus:</span>
+                        <span class="font-medium text-green-600">{{ summary.remaining_portions }} porsi</span>
+                    </div>
+                    {% endif %}
+                    <hr class="my-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Biaya Catering:</span>
+                        <span class="font-medium">{{ summary.catering_cost|currency }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Total Kasbon:</span>
+                        <span class="font-medium">{{ summary.total_kasbon|currency }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Total Tagihan:</span>
+                        <span class="font-medium">{{ summary.total_bill|currency }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Sudah Dibayar:</span>
+                        <span class="font-medium text-green-600">{{ summary.total_payments|currency }}</span>
+                    </div>
+                    <hr class="my-3">
+                    <div class="flex justify-between text-lg font-semibold">
+                        <span>Sisa Tagihan:</span>
+                        <span class="{% if summary.remaining_balance >= 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                            {{ summary.remaining_balance|currency }}
+                            {% if summary.remaining_balance < 0 %}(Lebih Bayar){% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions for this Customer -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Aksi Cepat</h3>
+                <div class="space-y-3">
+                    <a href="{{ url_for('orders.new_order') }}?customer_id={{ summary.customer.id }}" 
+                       class="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2 rounded-lg font-medium">
+                        📋 Tambah Pesanan
+                    </a>
+                    <a href="{{ url_for('kasbons.new_kasbon') }}?customer_id={{ summary.customer.id }}" 
+                       class="block w-full bg-yellow-600 hover:bg-yellow-700 text-white text-center py-2 rounded-lg font-medium">
+                        🛒 Tambah Kasbon
+                    </a>
+                    <a href="{{ url_for('payments.new_payment') }}?customer_id={{ summary.customer.id }}" 
+                       class="block w-full bg-green-600 hover:bg-green-700 text-white text-center py-2 rounded-lg font-medium">
+                        💳 Catat Pembayaran
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cost Calculator -->
+    <div class="mt-6 bg-white shadow rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Kalkulator Biaya</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Jumlah Porsi</label>
+                <input type="number" id="calc-portions" min="0" 
+                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                       placeholder="Masukkan jumlah porsi">
+            </div>
+            <div>
+                <button onclick="calculateCost()" 
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg w-full">
+                    💰 Hitung Biaya
+                </button>
+            </div>
+            <div id="calc-result" class="text-sm text-gray-600">
+                Hasil perhitungan akan muncul disini
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function calculateCost() {
+    const portions = document.getElementById('calc-portions').value;
+    const resultDiv = document.getElementById('calc-result');
+    
+    if (!portions || portions < 0) {
+        resultDiv.innerHTML = '<span class="text-red-600">Masukkan jumlah porsi yang valid</span>';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/cost_breakdown/{{ summary.customer.id }}?portions=${portions}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            resultDiv.innerHTML = `
+                <div class="text-sm">
+                    <div class="font-medium text-gray-900">${data.total_bundles} bundle = ${data.total_cost.toLocaleString('id-ID')} IDR</div>
+                    <div class="text-gray-600">
+                        ${data.charged_portions} porsi ditagih
+                        ${data.remaining_portions > 0 ? `, ${data.remaining_portions} porsi bonus` : ''}
+                    </div>
+                </div>
+            `;
+        } else {
+            resultDiv.innerHTML = '<span class="text-red-600">Error menghitung biaya</span>';
+        }
+    } catch (error) {
+        resultDiv.innerHTML = '<span class="text-red-600">Error koneksi</span>';
+    }
+}
+
+function exportToCSV() {
+    // Simple CSV export function
+    const customerName = "{{ summary.customer.name }}";
+    const startDate = "{{ start_date or '' }}";
+    const endDate = "{{ end_date or '' }}";
+    
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Ringkasan " + customerName + "\n";
+    csvContent += "Periode," + startDate + " - " + endDate + "\n\n";
+    csvContent += "Tanggal,Pagi,Siang,Sore,Total\n";
+    
+    if (window.summaryOrders && Array.isArray(window.summaryOrders)) {
+        window.summaryOrders.forEach(function(order) {
+            csvContent += order.date + "," + order.morning_portions + "," + order.afternoon_portions + "," + order.evening_portions + "," + order.total_portions + "\n";
+        });
+    }
+    
+    
+    csvContent += "\nRingkasan Keuangan\n";
+    csvContent += "Item,Jumlah\n";
+    csvContent += "Total Porsi,{{ summary.total_portions }}\n";
+    csvContent += "Total Bundle,{{ summary.total_bundles }}\n";
+    csvContent += "Porsi Ditagih,{{ summary.charged_portions }}\n";
+    csvContent += "Porsi Bonus,{{ summary.remaining_portions }}\n";
+    csvContent += "Biaya Catering,{{ summary.catering_cost }}\n";
+    csvContent += "Total Kasbon,{{ summary.total_kasbon }}\n";
+    csvContent += "Total Tagihan,{{ summary.total_bill }}\n";
+    csvContent += "Sudah Dibayar,{{ summary.total_payments }}\n";
+    csvContent += "Sisa Tagihan,{{ summary.remaining_balance }}\n";
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "ringkasan_" + customerName.replace(" ", "_") + "_" + new Date().toISOString().split('T')[0] + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Auto-calculate on input change
+document.getElementById('calc-portions').addEventListener('input', function() {
+    if (this.value) {
+        calculateCost();
+    }
+});
+</script>
+
+<style>
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    body {
+        background: white !important;
+        -webkit-print-color-adjust: exact;
+    }
+    
+    .shadow {
+        box-shadow: none !important;
+        border: 1px solid #e5e7eb !important;
+    }
+}
+</style>
+{% endblock %}

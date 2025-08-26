@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Catering Manager{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-0">
+    <!-- Header Section -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Dashboard Catering</h1>
+        <p class="text-gray-600 mt-2">Kelola pesanan, kasbon, dan pembayaran catering harian</p>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <a href="{{ url_for('main.add_order') }}" class="bg-white border border-blue-200 rounded-xl p-5 text-center transition-all duration-300 hover:shadow-lg hover:border-blue-400 group">
+            <div class="bg-blue-100 text-blue-600 p-3 rounded-full inline-flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
+                <i class="fas fa-plus text-lg"></i>
+            </div>
+            <div class="font-semibold text-gray-800">Tambah Pesanan</div>
+            <p class="text-xs text-gray-500 mt-1">Pesanan catering baru</p>
+        </a>
+        
+        <a href="{{ url_for('main.add_kasbon') }}" class="bg-white border border-amber-200 rounded-xl p-5 text-center transition-all duration-300 hover:shadow-lg hover:border-amber-400 group">
+            <div class="bg-amber-100 text-amber-600 p-3 rounded-full inline-flex items-center justify-center mb-3 group-hover:bg-amber-200 transition-colors">
+                <i class="fas fa-money-bill-wave text-lg"></i>
+            </div>
+            <div class="font-semibold text-gray-800">Tambah Kasbon</div>
+            <p class="text-xs text-gray-500 mt-1">Pencatatan kasbon</p>
+        </a>
+        
+        <a href="{{ url_for('main.add_payment') }}" class="bg-white border border-green-200 rounded-xl p-5 text-center transition-all duration-300 hover:shadow-lg hover:border-green-400 group">
+            <div class="bg-green-100 text-green-600 p-3 rounded-full inline-flex items-center justify-center mb-3 group-hover:bg-green-200 transition-colors">
+                <i class="fas fa-credit-card text-lg"></i>
+            </div>
+            <div class="font-semibold text-gray-800">Catat Pembayaran</div>
+            <p class="text-xs text-gray-500 mt-1">Pembayaran diterima</p>
+        </a>
+        
+        <a href="{{ url_for('main.add_customer') }}" class="bg-white border border-purple-200 rounded-xl p-5 text-center transition-all duration-300 hover:shadow-lg hover:border-purple-400 group">
+            <div class="bg-purple-100 text-purple-600 p-3 rounded-full inline-flex items-center justify-center mb-3 group-hover:bg-purple-200 transition-colors">
+                <i class="fas fa-user-plus text-lg"></i>
+            </div>
+            <div class="font-semibold text-gray-800">Tambah Pelanggan</div>
+            <p class="text-xs text-gray-500 mt-1">Pelanggan baru</p>
+        </a>
+    </div>
+
+    <!-- Customer Summary Cards -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-900">Daftar Pelanggan</h2>
+            <a href="{{ url_for('main.customers') }}" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                Lihat semua <i class="fas fa-chevron-right ml-1 text-xs"></i>
+            </a>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {% for customer in customers %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-md">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">{{ customer.name }}</h3>
+                            <p class="text-sm text-gray-500 mt-1">{{ customer.address }}</p>
+                        </div>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                            {% if customer.portions_per_bundle == 1 %}
+                                {{ customer.price_per_bundle|currency }}/porsi
+                            {% else %}
+                                {{ customer.price_per_bundle|currency }}/{{ customer.portions_per_bundle }} porsi
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mt-4">
+                        <div>
+                            <span class="text-xs text-gray-500">Pesanan aktif: 5</span>
+                        </div>
+                        <a href="{{ url_for('main.customer_summary', customer_id=customer.id) }}" 
+                           class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                            Lihat Detail <i class="fas fa-arrow-right ml-1 text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-900">Pesanan Terbaru</h3>
+            <a href="{{ url_for('main.orders') }}" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                Lihat semua <i class="fas fa-chevron-right ml-1 text-xs"></i>
+            </a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pelanggan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pagi</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Siang</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sore</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for order in recent_orders %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ order.date.strftime('%d/%m/%Y') }}</div>
+                            <div class="text-xs text-gray-500">{{ order.date.strftime('%A') }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ order.customer_name }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {{ order.morning_portions }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {{ order.afternoon_portions }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {{ order.evening_portions }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                {{ order.total_portions }} porsi
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

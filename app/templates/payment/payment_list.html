@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block title %}Daftar Pembayaran{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Daftar Pembayaran</h1>
+                    <p class="text-gray-600 text-sm sm:text-base">Kelola pembayaran dari pelanggan catering</p>
+                </div>
+                <a href="{{ url_for('payments.new_payment') }}" 
+                   class="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 text-sm sm:text-base">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Tambah Pembayaran
+                </a>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <select id="customerFilter" class="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200">
+                    <option value="">Semua Pelanggan</option>
+                    {% for customer in customers %}
+                    <option value="{{ customer.id }}">{{ customer.name }}</option>
+                    {% endfor %}
+                </select>
+                
+                <input type="date" id="dateFromFilter" class="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200" placeholder="Dari tanggal">
+                
+                <input type="date" id="dateToFilter" class="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200" placeholder="Sampai tanggal">
+                
+                <button onclick="resetFilters()" class="px-4 py-2.5 col-span-1 md:col-span-2 inline-flex items-center justify-center bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Reset Filter
+                </button>
+            </div>
+        </div>
+
+        <!-- Payments List -->
+        {% if payments %}
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-purple-50">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-purple-900 uppercase tracking-wider">Tanggal</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-purple-900 uppercase tracking-wider">Pelanggan</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-purple-900 uppercase tracking-wider">Jumlah</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-purple-900 uppercase tracking-wider">Keterangan</th>
+                            <th class="px-6 py-4 text-right text-xs font-semibold text-purple-900 uppercase tracking-wider">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="paymentsTableBody">
+                        {% for payment in payments %}
+                        <tr class="hover:bg-gray-50 transition-colors" data-customer-id="{{ payment.customer.id }}" data-date="{{ payment.date.strftime('%Y-%m-%d') }}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">
+                                    {{ payment.date.strftime('%d %b %Y') }}
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    {{ payment.created_at.strftime('%H:%M') }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                        <span class="text-sm font-semibold text-purple-600">
+                                            {{ payment.customer.name[0] }}
+                                        </span>
+                                    </div>
+                                    <div class="ml-3">
+                                        <div class="text-sm font-medium text-gray-900">{{ payment.customer.name }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-lg font-bold text-green-600">
+                                    Rp {{ "{:,}".format(payment.amount) }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                {% if payment.description %}
+                                <div class="text-sm text-gray-900 max-w-xs truncate">
+                                    {{ payment.description }}
+                                </div>
+                                {% else %}
+                                <span class="text-gray-400 italic">Tidak ada keterangan</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <a href="{{ url_for('payments.edit_payment', id=payment.id) }}" 
+                                       class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                    </a>
+                                    <button onclick="deletePayment({{ payment.id }})" 
+                                            class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl shadow-lg text-white p-6">
+                <div class="text-center">
+                    <div class="text-3xl font-bold mb-2" id="totalAmount">
+                        Rp {{ "{:,}".format(payments|sum(attribute='amount')) }}
+                    </div>
+                    <div class="text-green-100">Total Pembayaran</div>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl shadow-lg text-white p-6">
+                <div class="text-center">
+                    <div class="text-3xl font-bold mb-2" id="totalTransactions">{{ payments|length }}</div>
+                    <div class="text-purple-100">Jumlah Transaksi</div>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl shadow-lg text-white p-6">
+                <div class="text-center">
+                    <div class="text-3xl font-bold mb-2" id="averageAmount">
+                        Rp {{ "{:,}".format((payments|sum(attribute='amount') / payments|length)|round|int if payments|length > 0 else 0) }}
+                    </div>
+                    <div class="text-blue-100">Rata-rata per Transaksi</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State Message (Hidden by Default) -->
+        <div id="emptyStateMessage" class="text-center py-16 hidden">
+            <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Tidak ada pembayaran yang sesuai filter</h3>
+            <p class="text-gray-600 mb-6">Coba ubah filter untuk melihat hasil yang berbeda</p>
+        </div>
+
+        {% else %}
+        <div class="text-center py-16">
+            <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Belum ada pembayaran</h3>
+            <p class="text-gray-600 mb-6">Mulai dengan menambahkan pembayaran pertama</p>
+            <a href="{{ url_for('payments.new_payment') }}" 
+               class="inline-flex items-center px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                Tambah Pembayaran
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function deletePayment(id) {
+    if (confirm('Apakah Anda yakin ingin menghapus pembayaran ini?')) {
+        fetch(`/payments/${id}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Gagal menghapus pembayaran');
+            }
+        })
+        .catch(error => {
+            alert('Terjadi kesalahan');
+        });
+    }
+}
+
+function resetFilters() {
+    document.getElementById('customerFilter').value = '';
+    document.getElementById('dateFromFilter').value = '';
+    document.getElementById('dateToFilter').value = '';
+    filterTable();
+}
+
+// Utility function to parse date from text
+function parseDisplayDate(dateText) {
+    // Convert "25 Jan 2024" to "2024-01-25"
+    const months = {
+        'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
+        'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
+        'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+    };
+    
+    const parts = dateText.split(' ');
+    if (parts.length === 3) {
+        const day = parts[0].padStart(2, '0');
+        const month = months[parts[1]];
+        const year = parts[2];
+        if (month) {
+            return `${year}-${month}-${day}`;
+        }
+    }
+    return null;
+}
+
+// Format number with thousand separators
+function formatNumber(num) {
+    return num.toLocaleString('id-ID');
+}
+
+// Filter functionality
+document.getElementById('customerFilter').addEventListener('change', filterTable);
+document.getElementById('dateFromFilter').addEventListener('change', filterTable);
+document.getElementById('dateToFilter').addEventListener('change', filterTable);
+
+function filterTable() {
+    const customerFilter = document.getElementById('customerFilter').value;
+    const dateFromFilter = document.getElementById('dateFromFilter').value;
+    const dateToFilter = document.getElementById('dateToFilter').value;
+    const rows = document.querySelectorAll('#paymentsTableBody tr');
+    const emptyState = document.getElementById('emptyStateMessage');
+    const tableContainer = document.querySelector('.bg-white.rounded-xl.shadow-lg');
+    const summaryCards = document.querySelector('.mt-6.grid.grid-cols-1.md\\:grid-cols-3');
+    
+    let visibleCount = 0;
+    let totalAmount = 0;
+    
+    rows.forEach(row => {
+        const customerId = row.dataset.customerId;
+        const rowDate = row.dataset.date;
+        
+        let show = true;
+        
+        // Filter by customer
+        if (customerFilter && customerId !== customerFilter) {
+            show = false;
+        }
+        
+        // Filter by date range
+        if (dateFromFilter && rowDate < dateFromFilter) {
+            show = false;
+        }
+        
+        if (dateToFilter && rowDate > dateToFilter) {
+            show = false;
+        }
+        
+        // Show or hide row
+        if (show) {
+            row.style.display = '';
+            visibleCount++;
+            
+            // Extract amount for summary calculation
+            const amountText = row.querySelector('td:nth-child(3) .text-lg').textContent;
+            const amount = parseFloat(amountText.replace(/[^\d]/g, ''));
+            if (!isNaN(amount)) {
+                totalAmount += amount;
+            }
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Update summary cards
+    updateSummaryCards(totalAmount, visibleCount);
+    
+    // Show/hide empty state and table
+    if (visibleCount === 0 && rows.length > 0) {
+        // Show empty state for filtered results
+        if (tableContainer) tableContainer.style.display = 'none';
+        if (summaryCards) summaryCards.style.display = 'none';
+        if (emptyState) emptyState.classList.remove('hidden');
+    } else {
+        // Show table and summary
+        if (tableContainer) tableContainer.style.display = '';
+        if (summaryCards) summaryCards.style.display = '';
+        if (emptyState) emptyState.classList.add('hidden');
+    }
+}
+
+function updateSummaryCards(totalAmount, visibleCount) {
+    const totalAmountElement = document.getElementById('totalAmount');
+    const totalTransactionsElement = document.getElementById('totalTransactions');
+    const averageAmountElement = document.getElementById('averageAmount');
+    
+    if (totalAmountElement) {
+        totalAmountElement.textContent = `Rp ${formatNumber(totalAmount)}`;
+    }
+    
+    if (totalTransactionsElement) {
+        totalTransactionsElement.textContent = visibleCount;
+    }
+    
+    if (averageAmountElement) {
+        const average = visibleCount > 0 ? Math.round(totalAmount / visibleCount) : 0;
+        averageAmountElement.textContent = `Rp ${formatNumber(average)}`;
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default behavior if needed
+    filterTable();
+});
+</script>
+{% endblock %}
