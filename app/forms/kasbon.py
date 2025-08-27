@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, DateField, TextAreaField, SubmitField, SelectField
 from wtforms.validators import DataRequired, NumberRange, Optional
+from wtforms.widgets import TextInput
 
 from app.models import Customer
 
@@ -11,7 +12,7 @@ class KasbonForm(FlaskForm):
     customer_id = SelectField("Pelanggan", coerce=int, validators=[DataRequired()])
     item_name = StringField("Nama Item", validators=[DataRequired()])
     quantity = IntegerField("Jumlah", default=1, validators=[NumberRange(min=1)])
-    unit_price = IntegerField("Harga Satuan", validators=[NumberRange(min=1)])    
+    unit_price = IntegerField("Harga Satuan", validators=[NumberRange(min=1)], widget=TextInput())    
     submit = SubmitField("Simpan")
 
     def __init__(self, *args, **kwargs):

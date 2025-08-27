@@ -14,7 +14,6 @@ def list_payments():
 def new_payment():
     form = PaymentForm()
     if form.validate_on_submit():
-        total_portions = form.calculate_total()
         payment = Payment(
             date = form.date.data,
             customer_id = form.customer_id.data,
